@@ -1,0 +1,127 @@
+// Includes
+#include <iostream>
+#include <mariadb/conncpp.hpp>
+#include <cgicc/Cgicc.h>
+#include <cgicc/HTTPHTMLHeader.h>
+#include <cgicc/HTTPRedirectHeader.h>
+#include <cgicc/Cgicc.h>
+
+using namespace cgicc;
+using namespace std;
+
+// Function
+void printHello(std::shared_ptr<sql::Statement> &stmnt)
+{
+   try {
+      // Execute SELECT Statement
+      std::unique_ptr<sql::ResultSet> res(
+            stmnt->executeQuery("select * from bpm_1;")
+         );
+    Cgicc cgi;
+      while (res->next())
+      {
+          
+         
+    // HTTP Response Header
+    std::cout << cgicc::HTTPHTMLHeader( ) << endl;
+    //std::cout << "Content-Type: text/html\r\n\r\n";
+  
+
+    // Web page content
+   std::cout << "- " << std::endl;
+	std::cout << "<html>\n";
+        std::cout << "<head>\n";
+        std::cout << "<title>Table output</title>\n";
+        std::cout << "</head>\n";
+        
+        std::cout << "<style>\n";
+        std::cout << "table, th, td { border:1px solid black;}\n";
+        std::cout << "</style>\n";
+        
+        std::cout << "<body>\n";
+            
+        std::cout << "<h1>Blog Post Management</h1>\n";
+        std::cout << "<p>Table-1.</p>\n";
+        std::cout << "<table>\n";
+        std::cout << "<tr>\n";
+        std::cout << "<th>User name</th>\n";
+        std::cout << "<th>User type</th>\n";
+        std::cout << "<th>Access Control</th>\n";
+        std::cout << "<th>Email ID</th>\n";
+        std::cout << "<th>First Name</th>\n";
+        std::cout << "<th>Surname</th>\n";
+        std::cout << "</tr>\n";
+
+      // Loop over Result-set
+      while (res->next())
+      {
+           // Retrieve Values and Print student rows in HTML
+            std::cout << "<tr>\n";
+            std::cout << "<td>" << res->getString("user_name").c_str() << "</th>\n";
+            std::cout << "<td>" << res->getString("user_type").c_str() << "</th>\n";
+            std::cout << "<td>" << res->getString("access_control").c_str() << "</th>\n";
+            std::cout << "<td>" << res->getString("first_name").c_str() << "</th>\n";
+            std::cout << "<td>" << res->getString("surname").c_str() << "</th>\n";
+            std::cout << "</tr>\n";          
+      }
+      
+      std::cout << "</table>\n";
+      std::cout << "</body>\n";
+      std::cout << "</html>\n";
+   }
+   }
+   // Catch Exception
+   catch (sql::SQLException& e) {
+      std::cerr << "Error "
+         << e.what() << std::endl;
+   }
+}
+
+// Main Process
+int main(int argc, char **argv)
+{
+ 
+    //std::cout << "Content-Type: text/html\r\n\r\n";
+      // Loop over Result-set
+   try {
+       
+      // Instantiate Driver
+      sql::Driver* driver = sql::mariadb::get_driver_instance();
+
+      // Configure Connection
+      // The URL or TCP connection string format is
+      // jdbc:mariadb://host:port/database.
+      sql::SQLString url("jdbc:mariadb://127.0.0.1:3306/blog_post_mgmt");
+
+      // Use a properties map for the other connection options
+      sql::Properties properties({
+            {"user", "sunil_selvaraj"},
+            {"password", "Comp7025"},
+         });
+
+      // Establish Connection
+      // Use a smart pointer for extra safety
+      std::unique_ptr<sql::Connection> conn(driver->connect(url, properties));
+
+      // Create a Statement
+      // Use a smart pointer for extra safety
+      std::shared_ptr<sql::Statement> stmnt(conn->createStatement());
+
+      printHello(stmnt);
+
+      // Close Connection
+      conn->close();
+   }
+
+   // Catch Exceptions
+   catch (sql::SQLException &e) {
+      std::cerr << "Error Connecting to the database: "
+         << e.what() << std::endl;
+
+      // Exit (Failed)
+      return 1;
+   }
+
+   // Exit (Success)
+   return 0;
+}
